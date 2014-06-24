@@ -1,0 +1,11 @@
+
+dependencies {
+    compile("org.springframework:spring-context:$springVersion")
+    compile("org.springframework:spring-tx:$springVersion")
+    compile("org.springframework.data:spring-data-neo4j:$springNeoVersion")
+    compile("org.hibernate:hibernate-validator:$hibernateValidatorVersion")
+    compile("org.slf4j:slf4j-jdk14:$logVersion")
+    
+    testCompile("junit:junit:$junitVersion")
+    testCompile(group: 'org.neo4j', name: 'neo4j-kernel', version:"$neoVersion", classifier: "tests")
+}

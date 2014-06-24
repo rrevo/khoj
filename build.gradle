@@ -1,0 +1,34 @@
+
+allprojects {
+    apply plugin: 'eclipse'
+}
+
+subprojects {
+    group = 'com.onyem.khoj'
+    version = '0.1'
+    ext.sourceCompatibility = JavaVersion.VERSION_1_8
+
+    ext.springVersion = '4.0.5.RELEASE'
+    ext.springNeoVersion = '3.1.0.RELEASE'
+    ext.neoVersion = '2.0.3'
+    ext.hibernateValidatorVersion = '5.1.1.Final'
+    ext.junitVersion = '4.11'
+    ext.logVersion = '1.7.7'
+    ext.asmVersion = '5.0.3'
+
+    apply plugin: 'java'
+    
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "http://repo.spring.io/libs-release" }
+        maven { url "http://m2.neo4j.org" }
+    }
+    
+    test {
+        testLogging {
+            events 'passed'
+        }
+        testLogging.showStandardStreams = true
+    }
+}
