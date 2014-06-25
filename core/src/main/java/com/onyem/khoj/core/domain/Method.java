@@ -16,6 +16,8 @@ public class Method {
     @RelatedTo(type = "CLASS_HAS_METHODS")
     private Clazz clazz;
 
+    private State state = State.TRANSIENT;
+
     public Long getId() {
         return id;
     }
@@ -40,9 +42,17 @@ public class Method {
         this.clazz = clazz;
     }
 
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
+    }
+
     @Override
     public String toString() {
-        return "Method [id=" + id + ", name=" + name + ", clazzId=" + clazz.getId() + "]";
+        return "Method [id=" + id + ", name=" + name + ", clazz=" + clazz.getId() + ", state=" + state + "]";
     }
 
 }

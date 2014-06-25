@@ -10,6 +10,8 @@ public class Package {
     private Long id;
     private String name;
 
+    private State state = State.TRANSIENT;
+
     public Package() {
     }
 
@@ -29,9 +31,17 @@ public class Package {
         this.name = name;
     }
 
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
+    }
+
     @Override
     public String toString() {
-        return "Package [id=" + id + ", name=" + name + "]";
+        return "Package [id=" + id + ", name=" + name + ", state=" + state + "]";
     }
 
 }

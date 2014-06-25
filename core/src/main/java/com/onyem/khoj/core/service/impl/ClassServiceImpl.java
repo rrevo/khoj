@@ -6,8 +6,11 @@ import org.springframework.data.neo4j.core.GraphDatabase;
 import org.springframework.stereotype.Service;
 
 import com.onyem.khoj.core.domain.Clazz;
+import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.Package;
+import com.onyem.khoj.core.domain.State;
 import com.onyem.khoj.core.repository.ClassRepository;
+import com.onyem.khoj.core.repository.MethodRepository;
 import com.onyem.khoj.core.repository.PackageRepository;
 import com.onyem.khoj.core.service.ClassService;
 
@@ -15,10 +18,13 @@ import com.onyem.khoj.core.service.ClassService;
 public class ClassServiceImpl implements ClassService {
 
     @Autowired
+    PackageRepository packageRepository;
+
+    @Autowired
     ClassRepository classRepository;
 
     @Autowired
-    PackageRepository packageRepository;
+    MethodRepository methodRepository;
 
     @Autowired
     GraphDatabase graphDatabase;
@@ -28,14 +34,41 @@ public class ClassServiceImpl implements ClassService {
         Clazz returnClazz = null;
         Transaction tx = graphDatabase.beginTx();
         try {
-            Package pkg = clazz.getPkg();
-            if (pkg != null) {
-                Package foundPkg = packageRepository.findByName(pkg.getName());
-                if (foundPkg != null) {
-                    clazz.setPkg(foundPkg);
+            if (clazz.getId() == null) {
+                Package pkg = clazz.getPkg();
+                if (pkg != null) {
+                    Package foundPkg = packageRepository.findByName(pkg.getName());
+                    if (foundPkg != null) {
+                        clazz.setPkg(foundPkg);
+                    } else {
+                        pkg.setState(State.COMPLETE);
+                    }
                 }
+                if (clazz.getState() == State.TRANSIENT) {
+                    clazz.setState(State.COMPLETE);
+                }
+                for (Method method : clazz.getMethods()) {
+                    if (method.getState() == State.TRANSIENT) {
+                        method.setState(State.COMPLETE);
+                    }
+                }
+                returnClazz = classRepository.save(clazz);
+            } else {
+                Clazz prevClazz = classRepository.findOne(clazz.getId());
+                if (!prevClazz.getName().equals(clazz.getName())) {
+                    throw new IllegalArgumentException("Cannot update class name");
+                }
+                if (prevClazz.getState() == State.COMPLETE) {
+                    throw new IllegalArgumentException("Finalized node");
+                }
+                if (clazz.getState() == State.TRANSIENT) {
+                    throw new IllegalArgumentException("Invalid state:" + clazz.getState());
+                }
+                prevClazz.setState(clazz.getState());
+                // TODO merge packages
+                // TODO merge methods
+                returnClazz = classRepository.save(prevClazz);
             }
-            returnClazz = classRepository.save(clazz);
             tx.success();
         } finally {
             tx.close();
@@ -54,6 +87,27 @@ public class ClassServiceImpl implements ClassService {
         } else {
             Clazz clazz = classRepository.findByName(className);
             return clazz;
+        }
+    }
+
+    @Override
+    public Clazz addClassMethod(Clazz clazz, Method method) {
+        Transaction tx = graphDatabase.beginTx();
+        try {
+            clazz = classRepository.findOne(clazz.getId());
+            if (clazz == null) {
+                throw new IllegalArgumentException("Not persisted: " + clazz);
+            }
+            if (clazz.getState() == State.COMPLETE) {
+                throw new IllegalArgumentException("Finalized node");
+            }
+            method.setClazz(clazz);
+            method.setState(State.COMPLETE);
+            methodRepository.save(method);
+            tx.success();
+            return classRepository.findOne(clazz.getId());
+        } finally {
+            tx.close();
         }
     }
 

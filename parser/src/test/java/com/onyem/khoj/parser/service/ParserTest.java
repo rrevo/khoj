@@ -5,22 +5,28 @@ import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.test.TestGraphDatabaseFactory;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.Package;
 
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(loader = AnnotationConfigContextLoader.class, classes = { ParserModule.class, ParserTest.class })
 @Configuration
-@ComponentScan(basePackageClasses = ParserModule.class)
+@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class ParserTest {
 
     @Bean
@@ -32,17 +38,7 @@ public class ParserTest {
     ClassParserService classParserService;
 
     @Test
-    public void testClass() throws Exception {
-        try (AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext()) {
-            ctx.register(getClass());
-            ctx.refresh();
-
-            ParserTest parserTest = ctx.getBean(ParserTest.class);
-            parserTest.run();
-        }
-    }
-
-    private void run() throws Exception {
+    public void test() throws Exception {
         String className = "com.onyem.khoj.parser.service.ParserTest";
         ClassReader classReader = new ClassReader(className);
         ClassWriter classWriter = new ClassWriter(0);
@@ -60,8 +56,7 @@ public class ParserTest {
         Map<String, Method> methodsByName = clazz.getMethods().stream()
                 .collect(Collectors.toMap(Method::getName, (m) -> m));
         Assert.assertTrue(methodsByName.containsKey("graphDatabaseService"));
-        Assert.assertTrue(methodsByName.containsKey("run"));
-        Assert.assertTrue(methodsByName.containsKey("testClass"));
+        Assert.assertTrue(methodsByName.containsKey("test"));
         Assert.assertTrue(methodsByName.containsKey("<init>"));
 
         className = "com.onyem.khoj.parser.service.ClassParserService";
@@ -79,6 +74,7 @@ public class ParserTest {
         Assert.assertEquals("com.onyem.khoj.parser.service", pkg.getName());
 
         methodsByName = clazz.getMethods().stream().collect(Collectors.toMap(Method::getName, (m) -> m));
+        Assert.assertEquals(1, methodsByName.size());
         Assert.assertTrue(methodsByName.containsKey("addClass"));
     }
 }

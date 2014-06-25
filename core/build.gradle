@@ -7,5 +7,6 @@ dependencies {
     compile("org.slf4j:slf4j-jdk14:$logVersion")
     
     testCompile("junit:junit:$junitVersion")
+    testCompile("org.springframework:spring-test:$springVersion")
     testCompile(group: 'org.neo4j', name: 'neo4j-kernel', version:"$neoVersion", classifier: "tests")
 }

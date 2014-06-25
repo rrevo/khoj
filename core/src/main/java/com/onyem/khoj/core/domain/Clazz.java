@@ -25,8 +25,7 @@ public class Clazz {
     @RelatedTo(type = "CLASS_HAS_METHODS", direction = Direction.BOTH)
     private Set<Method> methods = new HashSet<>();
 
-    public Clazz() {
-    }
+    private State state = State.TRANSIENT;
 
     public Long getId() {
         return id;
@@ -81,9 +80,26 @@ public class Clazz {
         }
     }
 
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
+    }
+
     @Override
     public String toString() {
-        return "Clazz [id=" + id + ", name=" + name + ", pkg=" + pkg + ", methods=" + methods + "]";
+        return "Clazz [id=" + id + ", name=" + name + ", pkg=" + pkg + ", methods=" + methods + ", state=" + state
+                + "]";
+    }
+
+    public String getCanonicalName() {
+        if (pkg == null) {
+            return name;
+        } else {
+            return pkg.getName() + "." + getName();
+        }
     }
 
 }

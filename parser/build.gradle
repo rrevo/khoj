@@ -8,5 +8,6 @@ dependencies {
     compile("org.ow2.asm:asm:$asmVersion")
     
     testCompile("junit:junit:$junitVersion")
+    testCompile("org.springframework:spring-test:$springVersion")
     testCompile(group: 'org.neo4j', name: 'neo4j-kernel', version:"$neoVersion", classifier: "tests")
 }
