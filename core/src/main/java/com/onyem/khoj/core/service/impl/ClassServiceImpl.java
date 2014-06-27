@@ -82,10 +82,9 @@ public class ClassServiceImpl implements ClassService {
         String pkgName = names[0];
         String className = names[1];
         if (pkgName == null) {
-            // TODO Fix this search to use package name as well
-            return classRepository.findByName(className);
+            throw new UnsupportedOperationException();
         } else {
-            Clazz clazz = classRepository.findByName(className);
+            Clazz clazz = classRepository.findByName(className, pkgName);
             return clazz;
         }
     }

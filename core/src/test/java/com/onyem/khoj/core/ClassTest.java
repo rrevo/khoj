@@ -74,23 +74,34 @@ public class ClassTest extends AbstractTestBase {
     }
 
     @Test
-    public void testPartialClassAndMethods() throws Exception {
+    public void testClassNameSearch() throws Exception {
+        Package pkg = new Package();
+        pkg.setName("com.onyem");
         Clazz clazz = new Clazz();
-        clazz.setName("Object");
-        clazz.setState(State.PARTIAL);
+        clazz.setPkg(pkg);
+        clazz.setName("Foo");
+        clazz.setState(State.COMPLETE);
         Assert.assertNull(classService.findByCanonicalName(clazz.getCanonicalName()));
         classService.addClass(clazz);
 
-        Clazz clazzByName = classService.findByCanonicalName("java.lang.Object");
-        assertClass(clazzByName, "Object", null, State.PARTIAL);
+        Clazz clazzByName = classService.findByCanonicalName("com.onyem.Foo");
+        assertClass(clazzByName, "Foo", "com.onyem", State.COMPLETE);
 
-        classService.addClassMethod(clazzByName, createEquals());
-        clazzByName = classService.addClassMethod(clazzByName, createHashCode());
-        assertClass(clazzByName, "Object", null, State.PARTIAL);
+        long classId = clazzByName.getId();
 
-        clazzByName.setState(State.COMPLETE);
-        clazzByName = classService.addClass(clazzByName);
-        assertClassAndMethods(clazzByName, "Object", null, State.COMPLETE);
+        pkg = new Package();
+        pkg.setName("org.onyem");
+        clazz = new Clazz();
+        clazz.setPkg(pkg);
+        clazz.setName("Foo");
+        clazz.setState(State.COMPLETE);
+        Assert.assertNull(classService.findByCanonicalName(clazz.getCanonicalName()));
+        classService.addClass(clazz);
+
+        clazzByName = classService.findByCanonicalName("org.onyem.Foo");
+        assertClass(clazzByName, "Foo", "org.onyem", State.COMPLETE);
+
+        Assert.assertTrue(clazzByName.getId() != classId);
     }
 
     private Method createHashCode() {

@@ -19,6 +19,7 @@ public class Clazz {
     private String name;
 
     @Fetch
+    @RelatedTo(type = "PACKAGE_HAS_CLASS", direction = Direction.BOTH)
     private Package pkg;
 
     @Fetch
