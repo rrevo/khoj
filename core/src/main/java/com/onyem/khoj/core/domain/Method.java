@@ -10,6 +10,7 @@ public class Method {
 
     @GraphId
     private Long id;
+    final String type = "com.onyem.khoj.core.domain.Method";
     private String name;
 
     @Fetch

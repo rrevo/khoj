@@ -16,6 +16,8 @@ public class Clazz {
 
     @GraphId
     private Long id;
+    final String type = "com.onyem.khoj.core.domain.Clazz";
+
     private String name;
 
     @Fetch

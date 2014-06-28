@@ -7,7 +7,7 @@ import com.onyem.khoj.core.domain.Clazz;
 
 public interface ClassRepository extends GraphRepository<Clazz> {
 
-    @Query(value = "MATCH (clazz {name:{0}})-[:PACKAGE_HAS_CLASS]->(pkg {name:{1}}) return clazz")
+    @Query(value = "MATCH (clazz {type:'com.onyem.khoj.core.domain.Clazz', name:{0}})-[:PACKAGE_HAS_CLASS]->(pkg {type:'com.onyem.khoj.core.domain.Package', name:{1}}) return clazz")
     Clazz findByName(String className, String packageName);
 
 }

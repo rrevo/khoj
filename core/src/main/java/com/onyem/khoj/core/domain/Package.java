@@ -8,6 +8,8 @@ public class Package {
 
     @GraphId
     private Long id;
+    final String type = "com.onyem.khoj.core.domain.Package";
+
     private String name;
 
     private State state = State.TRANSIENT;
