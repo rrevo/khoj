@@ -1,5 +1,7 @@
 package com.onyem.khoj.parser.service.impl;
 
+import java.util.Optional;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -50,8 +52,11 @@ public class ClassParserServiceImpl implements ClassParserService {
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
             Method method = new Method();
             method.setName(name);
-            classService.addClassMethod(clazz, method);
-            return super.visitMethod(access, name, desc, signature, exceptions);
+            Clazz newClass = classService.addClassMethod(clazz, method);
+            method = findMethodByName(newClass, name).get();
+            MethodVisitor methodVisitor = super.visitMethod(access, name, desc, signature, exceptions);
+            MethodPrinter methodPrinter = new MethodPrinter(api, methodVisitor, classService, method);
+            return methodPrinter;
         }
 
         @Override
@@ -61,6 +66,52 @@ public class ClassParserServiceImpl implements ClassParserService {
             super.visitEnd();
         }
 
+    }
+
+    static class MethodPrinter extends MethodVisitor {
+        final private ClassService classService;
+
+        @SuppressWarnings("unused")
+        final private Method method;
+
+        public MethodPrinter(int api, MethodVisitor methodVisitor, ClassService classService, Method method) {
+            super(api, methodVisitor);
+            this.classService = classService;
+            this.method = method;
+        }
+
+        @Override
+        public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+            if (opcode == Opcodes.INVOKEVIRTUAL) {
+
+                Clazz clazz = new Clazz();
+                clazz.setName(owner);
+                clazz.setState(State.INFERRED);
+
+                Clazz foundClazz = classService.findByCanonicalName(clazz.getCanonicalName());
+                if (foundClazz == null) {
+                    clazz = classService.addClass(clazz);
+                } else {
+                    clazz = foundClazz;
+                }
+
+                Optional<Method> isMethod = findMethodByName(clazz, name);
+                if (!isMethod.isPresent()) {
+                    Method invokedMethod = new Method();
+                    invokedMethod.setClazz(clazz);
+                    invokedMethod.setName(name);
+                    invokedMethod.setState(State.INFERRED);
+                    clazz = classService.addClassMethod(clazz, invokedMethod);
+
+                    invokedMethod = findMethodByName(clazz, name).get();
+                }
+            }
+            super.visitMethodInsn(opcode, owner, name, desc, itf);
+        }
+    }
+
+    static private Optional<Method> findMethodByName(Clazz clazz, String methodName) {
+        return clazz.getMethods().stream().filter(m -> m.getName().equals(methodName)).findFirst();
     }
 
 }

@@ -1,6 +1,7 @@
 package com.onyem.khoj.parser.service;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.Assert;
@@ -22,6 +23,8 @@ import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.Package;
+import com.onyem.khoj.core.domain.State;
+import com.onyem.khoj.core.service.ClassService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class, classes = { ParserModule.class, ParserTest.class })
@@ -36,6 +39,9 @@ public class ParserTest {
 
     @Autowired
     ClassParserService classParserService;
+
+    @Autowired
+    ClassService classService;
 
     @Test
     public void test() throws Exception {
@@ -53,11 +59,12 @@ public class ParserTest {
         final long pkgId = pkg.getId();
         Assert.assertEquals("com.onyem.khoj.parser.service", pkg.getName());
 
-        Map<String, Method> methodsByName = clazz.getMethods().stream()
-                .collect(Collectors.toMap(Method::getName, (m) -> m));
-        Assert.assertTrue(methodsByName.containsKey("graphDatabaseService"));
-        Assert.assertTrue(methodsByName.containsKey("test"));
-        Assert.assertTrue(methodsByName.containsKey("<init>"));
+        assertMethods(clazz.getMethods(), State.COMPLETE, false, "graphDatabaseService", "test", "<init>");
+
+        className = "org.neo4j.test.TestGraphDatabaseFactory";
+        clazz = classService.findByCanonicalName(className);
+        Assert.assertEquals(State.INFERRED, clazz.getState());
+        assertMethods(clazz.getMethods(), State.INFERRED, true, "newImpermanentDatabase");
 
         className = "com.onyem.khoj.parser.service.ClassParserService";
         classReader = new ClassReader(className);
@@ -73,8 +80,25 @@ public class ParserTest {
         Assert.assertEquals(pkgId, pkg.getId().longValue());
         Assert.assertEquals("com.onyem.khoj.parser.service", pkg.getName());
 
-        methodsByName = clazz.getMethods().stream().collect(Collectors.toMap(Method::getName, (m) -> m));
-        Assert.assertEquals(1, methodsByName.size());
-        Assert.assertTrue(methodsByName.containsKey("addClass"));
+        assertMethods(clazz.getMethods(), State.COMPLETE, true, "addClass");
+
+        clazz = classService.findByCanonicalName("com.onyem.khoj.core.domain.Clazz");
+        Assert.assertEquals(State.INFERRED, clazz.getState());
+        assertMethods(clazz.getMethods(), State.INFERRED, true, "getId", "getName", "getPkg", "getMethods", "getState");
+    }
+
+    private void assertMethods(Set<Method> methods, State state, boolean checkSize, String... names) {
+        Map<String, Method> methodsByName = methods.stream().collect(Collectors.toMap(Method::getName, (m) -> m));
+        int size = 0;
+        for (String name : names) {
+            Assert.assertTrue(methodsByName.containsKey(name));
+            if (state != null) {
+                Assert.assertEquals(state, methodsByName.get(name).getState());
+            }
+            size++;
+        }
+        if (checkSize) {
+            Assert.assertEquals(size, methodsByName.size());
+        }
     }
 }

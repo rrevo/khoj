@@ -11,6 +11,9 @@ public enum State {
     // Being constructed
     PARTIAL,
 
+    // Created by another class
+    INFERRED,
+
     // Construction is complete
     COMPLETE;
 

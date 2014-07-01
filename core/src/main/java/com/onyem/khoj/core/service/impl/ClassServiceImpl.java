@@ -101,7 +101,9 @@ public class ClassServiceImpl implements ClassService {
                 throw new IllegalArgumentException("Finalized node");
             }
             method.setClazz(clazz);
-            method.setState(State.COMPLETE);
+            if (method.getState() == State.TRANSIENT) {
+                method.setState(State.COMPLETE);
+            }
             methodRepository.save(method);
             tx.success();
             return classRepository.findOne(clazz.getId());
