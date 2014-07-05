@@ -53,7 +53,8 @@ public class Method {
 
     @Override
     public String toString() {
-        return "Method [id=" + id + ", name=" + name + ", clazz=" + clazz.getId() + ", state=" + state + "]";
+        return "Method [id=" + id + ", name=" + name + ", clazz=" + ((clazz == null) ? "null" : clazz.getId())
+                + ", state=" + state + "]";
     }
 
 }

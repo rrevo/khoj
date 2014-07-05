@@ -71,7 +71,6 @@ public class ClassParserServiceImpl implements ClassParserService {
     static class MethodPrinter extends MethodVisitor {
         final private ClassService classService;
 
-        @SuppressWarnings("unused")
         final private Method method;
 
         public MethodPrinter(int api, MethodVisitor methodVisitor, ClassService classService, Method method) {
@@ -96,15 +95,20 @@ public class ClassParserServiceImpl implements ClassParserService {
                 }
 
                 Optional<Method> isMethod = findMethodByName(clazz, name);
+                Method invokedMethod = null;
                 if (!isMethod.isPresent()) {
-                    Method invokedMethod = new Method();
+                    invokedMethod = new Method();
                     invokedMethod.setClazz(clazz);
                     invokedMethod.setName(name);
                     invokedMethod.setState(State.INFERRED);
                     clazz = classService.addClassMethod(clazz, invokedMethod);
 
                     invokedMethod = findMethodByName(clazz, name).get();
+                } else {
+                    invokedMethod = isMethod.get();
                 }
+                classService.addMethodInvokes(method, invokedMethod);
+
             }
             super.visitMethodInsn(opcode, owner, name, desc, itf);
         }

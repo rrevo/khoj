@@ -1,5 +1,6 @@
 package com.onyem.khoj.parser.service;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,46 +46,67 @@ public class ParserTest {
 
     @Test
     public void test() throws Exception {
-        String className = "com.onyem.khoj.parser.service.ParserTest";
-        ClassReader classReader = new ClassReader(className);
-        ClassWriter classWriter = new ClassWriter(0);
-        classReader.accept(classWriter, 0);
-        byte[] bytes = classWriter.toByteArray();
+        long pkgId = -1;
+        {
+            String className = "com.onyem.khoj.parser.service.ParserTest";
+            ClassReader classReader = new ClassReader(className);
+            ClassWriter classWriter = new ClassWriter(0);
+            classReader.accept(classWriter, 0);
+            byte[] bytes = classWriter.toByteArray();
 
-        Clazz clazz = classParserService.addClass(bytes);
-        Assert.assertNotNull(clazz.getId());
-        Assert.assertEquals("ParserTest", clazz.getName());
+            Clazz clazzParserTest = classParserService.addClass(bytes);
+            Assert.assertNotNull(clazzParserTest.getId());
+            Assert.assertEquals("ParserTest", clazzParserTest.getName());
 
-        Package pkg = clazz.getPkg();
-        final long pkgId = pkg.getId();
-        Assert.assertEquals("com.onyem.khoj.parser.service", pkg.getName());
+            Package pkg = clazzParserTest.getPkg();
+            pkgId = pkg.getId();
+            Assert.assertEquals("com.onyem.khoj.parser.service", pkg.getName());
 
-        assertMethods(clazz.getMethods(), State.COMPLETE, false, "graphDatabaseService", "test", "<init>");
+            assertMethods(clazzParserTest.getMethods(), State.COMPLETE, false, "graphDatabaseService", "test",
+                    "<init>", "assertMethods", "getMethodByName");
+            Method dbServiceMethod = getMethodByName("graphDatabaseService", clazzParserTest.getMethods());
+            Method assertMethodsMethod = getMethodByName("assertMethods", clazzParserTest.getMethods());
 
-        className = "org.neo4j.test.TestGraphDatabaseFactory";
-        clazz = classService.findByCanonicalName(className);
-        Assert.assertEquals(State.INFERRED, clazz.getState());
-        assertMethods(clazz.getMethods(), State.INFERRED, true, "newImpermanentDatabase");
+            className = "org.neo4j.test.TestGraphDatabaseFactory";
+            Clazz clazzDatabaseFactory = classService.findByCanonicalName(className);
+            Assert.assertEquals(State.INFERRED, clazzDatabaseFactory.getState());
+            assertMethods(clazzDatabaseFactory.getMethods(), State.INFERRED, true, "newImpermanentDatabase");
+            Method methodInvoked = clazzDatabaseFactory.getMethods().iterator().next();
 
-        className = "com.onyem.khoj.parser.service.ClassParserService";
-        classReader = new ClassReader(className);
-        classWriter = new ClassWriter(0);
-        classReader.accept(classWriter, 0);
-        bytes = classWriter.toByteArray();
+            Set<Method> methodsInvoked = classService.getMethodsInvoked(dbServiceMethod);
+            Assert.assertEquals(1, methodsInvoked.size());
+            Assert.assertEquals(methodInvoked.getId(), methodsInvoked.iterator().next().getId());
 
-        clazz = classParserService.addClass(bytes);
-        Assert.assertNotNull(clazz.getId());
-        Assert.assertEquals("ClassParserService", clazz.getName());
+            methodsInvoked = classService.getMethodsInvoked(assertMethodsMethod);
+            Assert.assertEquals(2, methodsInvoked.size());
+            Clazz clazzMethod = classService.findByCanonicalName("com.onyem.khoj.core.domain.Method");
+            Assert.assertEquals(getMethodByName("getState", clazzMethod.getMethods()).getId(),
+                    getMethodByName("getState", methodsInvoked).getId());
+            Assert.assertEquals(getMethodByName("getId", clazzMethod.getMethods()).getId(),
+                    getMethodByName("getId", methodsInvoked).getId());
+        }
+        {
+            String className = "com.onyem.khoj.parser.service.ClassParserService";
+            ClassReader classReader = new ClassReader(className);
+            ClassWriter classWriter = new ClassWriter(0);
+            classReader.accept(classWriter, 0);
+            byte[] bytes = classWriter.toByteArray();
 
-        pkg = clazz.getPkg();
-        Assert.assertEquals(pkgId, pkg.getId().longValue());
-        Assert.assertEquals("com.onyem.khoj.parser.service", pkg.getName());
+            Clazz clazz = classParserService.addClass(bytes);
+            Assert.assertNotNull(clazz.getId());
+            Assert.assertEquals("ClassParserService", clazz.getName());
 
-        assertMethods(clazz.getMethods(), State.COMPLETE, true, "addClass");
+            Package pkg = clazz.getPkg();
+            Assert.assertEquals(pkgId, pkg.getId().longValue());
+            Assert.assertEquals("com.onyem.khoj.parser.service", pkg.getName());
 
-        clazz = classService.findByCanonicalName("com.onyem.khoj.core.domain.Clazz");
-        Assert.assertEquals(State.INFERRED, clazz.getState());
-        assertMethods(clazz.getMethods(), State.INFERRED, true, "getId", "getName", "getPkg", "getMethods", "getState");
+            assertMethods(clazz.getMethods(), State.COMPLETE, true, "addClass");
+
+            clazz = classService.findByCanonicalName("com.onyem.khoj.core.domain.Clazz");
+            Assert.assertEquals(State.INFERRED, clazz.getState());
+            assertMethods(clazz.getMethods(), State.INFERRED, true, "getId", "getName", "getPkg", "getMethods",
+                    "getState");
+        }
     }
 
     private void assertMethods(Set<Method> methods, State state, boolean checkSize, String... names) {
@@ -94,11 +116,16 @@ public class ParserTest {
             Assert.assertTrue(methodsByName.containsKey(name));
             if (state != null) {
                 Assert.assertEquals(state, methodsByName.get(name).getState());
+                Assert.assertNotNull(methodsByName.get(name).getId());
             }
             size++;
         }
         if (checkSize) {
             Assert.assertEquals(size, methodsByName.size());
         }
+    }
+
+    private Method getMethodByName(String name, Collection<Method> methods) {
+        return methods.stream().filter(m -> m.getName().equals(name)).findFirst().get();
     }
 }

@@ -1,12 +1,17 @@
 package com.onyem.khoj.core.service.impl;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.neo4j.graphdb.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.core.GraphDatabase;
+import org.springframework.data.neo4j.support.Neo4jTemplate;
 import org.springframework.stereotype.Service;
 
 import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Method;
+import com.onyem.khoj.core.domain.MethodToMethodRelationship;
 import com.onyem.khoj.core.domain.Package;
 import com.onyem.khoj.core.domain.State;
 import com.onyem.khoj.core.repository.ClassRepository;
@@ -28,6 +33,9 @@ public class ClassServiceImpl implements ClassService {
 
     @Autowired
     GraphDatabase graphDatabase;
+
+    @Autowired
+    Neo4jTemplate template;
 
     @Override
     public Clazz addClass(Clazz clazz) {
@@ -110,6 +118,27 @@ public class ClassServiceImpl implements ClassService {
         } finally {
             tx.close();
         }
+    }
+
+    @Override
+    public boolean addMethodInvokes(Method source, Method destination) {
+        Transaction tx = graphDatabase.beginTx();
+        boolean created = false;
+        try {
+            Object o = template.createRelationshipBetween(source, destination, MethodToMethodRelationship.class,
+                    "INVOKES", false);
+            created = o != null;
+            tx.success();
+        } finally {
+            tx.close();
+        }
+        return created;
+    }
+
+    @Override
+    public Set<Method> getMethodsInvoked(Method source) {
+        Set<Method> methods = methodRepository.findMethodsByInvoked(source.getId());
+        return methods.stream().map(m -> methodRepository.findOne(m.getId())).collect(Collectors.toSet());
     }
 
     private String[] getPackageAndClassName(String name) {
