@@ -9,6 +9,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.onyem.khoj.core.domain.Access;
 import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.Package;
@@ -107,12 +108,14 @@ public class ClassTest extends AbstractTestBase {
     private Method createHashCode() {
         Method method = new Method();
         method.setName("hashCode");
+        method.setAccess(Access.PUBLIC);
         return method;
     }
 
     private Method createEquals() {
         Method method = new Method();
         method.setName("equals");
+        method.setAccess(Access.PUBLIC);
         return method;
     }
 
@@ -140,11 +143,15 @@ public class ClassTest extends AbstractTestBase {
         Method method = methodsByName.get("hashCode");
         Assert.assertNotNull(method.getId());
         Assert.assertEquals(clazzByName.getId(), method.getClazz().getId());
+        Assert.assertEquals(Access.PUBLIC, method.getAccess());
+        Assert.assertTrue(method.getFlags().isEmpty());
         Assert.assertEquals(State.COMPLETE, method.getState());
 
         method = methodsByName.get("equals");
         Assert.assertNotNull(method.getId());
         Assert.assertEquals(clazzByName.getId(), method.getClazz().getId());
+        Assert.assertEquals(Access.PUBLIC, method.getAccess());
+        Assert.assertTrue(method.getFlags().isEmpty());
         Assert.assertEquals(State.COMPLETE, method.getState());
     }
 }

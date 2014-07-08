@@ -8,7 +8,7 @@ public class Package {
 
     @GraphId
     private Long id;
-    final String type = "com.onyem.khoj.core.domain.Package";
+    final String nodeType = "com.onyem.khoj.core.domain.Package";
 
     private String name;
 

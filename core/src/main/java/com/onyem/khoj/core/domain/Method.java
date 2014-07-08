@@ -1,5 +1,8 @@
 package com.onyem.khoj.core.domain;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.data.neo4j.annotation.Fetch;
 import org.springframework.data.neo4j.annotation.GraphId;
 import org.springframework.data.neo4j.annotation.NodeEntity;
@@ -10,7 +13,7 @@ public class Method {
 
     @GraphId
     private Long id;
-    final String type = "com.onyem.khoj.core.domain.Method";
+    final String nodeType = "com.onyem.khoj.core.domain.Method";
     private String name;
 
     @Fetch
@@ -18,6 +21,10 @@ public class Method {
     private Clazz clazz;
 
     private State state = State.TRANSIENT;
+
+    private Access access;
+
+    private Set<Flag> flags = new HashSet<Flag>();
 
     public Long getId() {
         return id;
@@ -51,10 +58,29 @@ public class Method {
         this.state = state;
     }
 
+    public Access getAccess() {
+        return access;
+    }
+
+    public void setAccess(Access access) {
+        this.access = access;
+    }
+
+    public Set<Flag> getFlags() {
+        return flags;
+    }
+
+    public void setFlags(Set<Flag> flags) {
+        this.flags = flags;
+    }
+
+    public void addFlag(Flag flag) {
+        this.flags.add(flag);
+    }
+
     @Override
     public String toString() {
         return "Method [id=" + id + ", name=" + name + ", clazz=" + ((clazz == null) ? "null" : clazz.getId())
-                + ", state=" + state + "]";
+                + ", state=" + state + ", access=" + access + ", flags=" + flags + "]";
     }
-
 }

@@ -1,6 +1,8 @@
 package com.onyem.khoj.parser.service.impl;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -9,9 +11,12 @@ import org.objectweb.asm.Opcodes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.onyem.khoj.core.domain.Access;
 import com.onyem.khoj.core.domain.Clazz;
+import com.onyem.khoj.core.domain.Flag;
 import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.State;
+import com.onyem.khoj.core.domain.Type;
 import com.onyem.khoj.core.service.ClassService;
 import com.onyem.khoj.parser.service.ClassParserService;
 
@@ -45,15 +50,63 @@ public class ClassParserServiceImpl implements ClassParserService {
             Clazz clazz = new Clazz();
             clazz.setName(name);
             clazz.setState(State.PARTIAL);
+            clazz.setAccess(getAccess(access));
+            clazz.setType(getType(access));
+            clazz.setFlags(getFlags(access));
             this.clazz = classService.addClass(clazz);
+        }
+
+        private Set<Flag> getFlags(int access) {
+            Set<Flag> flags = new HashSet<Flag>();
+            if (checkBit(access, Opcodes.ACC_FINAL)) {
+                flags.add(Flag.FINAL);
+            }
+            if (checkBit(access, Opcodes.ACC_SYNTHETIC)) {
+                flags.add(Flag.SYNTHETIC);
+            }
+            if (checkBit(access, Opcodes.ACC_ABSTRACT)) {
+                flags.add(Flag.ABSTRACT);
+            }
+            return flags;
+        }
+
+        private Type getType(int accessCode) {
+            if (checkBit(accessCode, Opcodes.ACC_INTERFACE)) {
+                return Type.INTERFACE;
+            } else if (checkBit(accessCode, Opcodes.ACC_ENUM)) {
+                return Type.ENUM;
+            } else if (checkBit(accessCode, Opcodes.ACC_ANNOTATION)) {
+                return Type.ANNOTATION;
+            } else {
+                return Type.CLASS;
+            }
+        }
+
+        private Access getAccess(int accessCode) {
+            if (checkBit(accessCode, Opcodes.ACC_PUBLIC)) {
+                return Access.PUBLIC;
+            } else if (checkBit(accessCode, Opcodes.ACC_PRIVATE)) {
+                return Access.PRIVATE;
+            } else if (checkBit(accessCode, Opcodes.ACC_PROTECTED)) {
+                return Access.PROTECTED;
+            } else {
+                return Access.DEFAULT;
+            }
+        }
+
+        private boolean checkBit(int code, int mask) {
+            return (code & mask) > 0;
         }
 
         @Override
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
             Method method = new Method();
             method.setName(name);
+            method.setAccess(getAccess(access));
+            method.setFlags(getFlags(access));
             Clazz newClass = classService.addClassMethod(clazz, method);
             method = findMethodByName(newClass, name).get();
+
             MethodVisitor methodVisitor = super.visitMethod(access, name, desc, signature, exceptions);
             MethodPrinter methodPrinter = new MethodPrinter(api, methodVisitor, classService, method);
             return methodPrinter;

@@ -1,5 +1,6 @@
 package com.onyem.khoj.core.service.impl;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -112,12 +113,20 @@ public class ClassServiceImpl implements ClassService {
             if (method.getState() == State.TRANSIENT) {
                 method.setState(State.COMPLETE);
             }
+            Optional<Method> savedMethod = findMethodByName(clazz, method.getName());
+            if (savedMethod.isPresent()) {
+                method.setId(savedMethod.get().getId());
+            }
             methodRepository.save(method);
             tx.success();
             return classRepository.findOne(clazz.getId());
         } finally {
             tx.close();
         }
+    }
+
+    private Optional<Method> findMethodByName(Clazz clazz, String methodName) {
+        return clazz.getMethods().stream().filter(m -> m.getName().equals(methodName)).findFirst();
     }
 
     @Override

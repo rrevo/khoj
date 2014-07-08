@@ -16,7 +16,7 @@ public class Clazz {
 
     @GraphId
     private Long id;
-    final String type = "com.onyem.khoj.core.domain.Clazz";
+    final String nodeType = "com.onyem.khoj.core.domain.Clazz";
 
     private String name;
 
@@ -27,6 +27,12 @@ public class Clazz {
     @Fetch
     @RelatedTo(type = "CLASS_HAS_METHODS", direction = Direction.BOTH)
     private Set<Method> methods = new HashSet<>();
+
+    private Type type;
+
+    private Access access;
+
+    private Set<Flag> flags;
 
     private State state = State.TRANSIENT;
 
@@ -63,6 +69,22 @@ public class Clazz {
         this.pkg = pkg;
     }
 
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public Access getAccess() {
+        return access;
+    }
+
+    public void setAccess(Access access) {
+        this.access = access;
+    }
+
     public Set<Method> getMethods() {
         return methods;
     }
@@ -91,18 +113,33 @@ public class Clazz {
         this.state = state;
     }
 
-    @Override
-    public String toString() {
-        return "Clazz [id=" + id + ", name=" + name + ", pkg=" + pkg + ", methods=" + methods + ", state=" + state
-                + "]";
-    }
-
     public String getCanonicalName() {
         if (pkg == null) {
             return name;
         } else {
             return pkg.getName() + "." + getName();
         }
+    }
+
+    public Set<Flag> getFlags() {
+        return flags;
+    }
+
+    public void setFlags(Set<Flag> flags) {
+        this.flags = flags;
+    }
+
+    public void addFlag(Flag flag) {
+        if (flags == null) {
+            flags = new HashSet<Flag>();
+        }
+        flags.add(flag);
+    }
+
+    @Override
+    public String toString() {
+        return "Clazz [id=" + id + ", type=" + type + ", name=" + getCanonicalName() + ", access=" + access
+                + ", methods=" + methods + ", state=" + state + ", flags=" + flags + "]";
     }
 
 }

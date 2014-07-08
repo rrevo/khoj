@@ -9,7 +9,7 @@ import com.onyem.khoj.core.domain.Method;
 
 public interface MethodRepository extends GraphRepository<Method> {
 
-    @Query(value = "MATCH (method {type:'com.onyem.khoj.core.domain.Method'})-[:INVOKES]->(invoked {type:'com.onyem.khoj.core.domain.Method'}) WHERE id(method) = {0} return (invoked)")
+    @Query(value = "MATCH (method {nodeType:'com.onyem.khoj.core.domain.Method'})-[:INVOKES]->(invoked {nodeType:'com.onyem.khoj.core.domain.Method'}) WHERE id(method) = {0} return (invoked)")
     Set<Method> findMethodsByInvoked(long methodId);
 
 }
