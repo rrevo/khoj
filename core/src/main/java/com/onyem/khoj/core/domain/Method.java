@@ -20,8 +20,6 @@ public class Method {
     @RelatedTo(type = "CLASS_HAS_METHODS")
     private Clazz clazz;
 
-    private State state = State.TRANSIENT;
-
     private Access access;
 
     private Set<Flag> flags = new HashSet<Flag>();
@@ -50,14 +48,6 @@ public class Method {
         this.clazz = clazz;
     }
 
-    public State getState() {
-        return state;
-    }
-
-    public void setState(State state) {
-        this.state = state;
-    }
-
     public Access getAccess() {
         return access;
     }
@@ -81,6 +71,6 @@ public class Method {
     @Override
     public String toString() {
         return "Method [id=" + id + ", name=" + name + ", clazz=" + ((clazz == null) ? "null" : clazz.getId())
-                + ", state=" + state + ", access=" + access + ", flags=" + flags + "]";
+                + ", access=" + access + ", flags=" + flags + "]";
     }
 }

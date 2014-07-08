@@ -13,7 +13,6 @@ import com.onyem.khoj.core.domain.Access;
 import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.Package;
-import com.onyem.khoj.core.domain.State;
 import com.onyem.khoj.core.service.ClassService;
 
 public class ClassTest extends AbstractTestBase {
@@ -38,10 +37,10 @@ public class ClassTest extends AbstractTestBase {
         }
 
         Clazz clazzByName = classService.findByCanonicalName("java.lang.Object");
-        assertClassAndMethods(clazzByName, "Object", "java.lang", State.COMPLETE);
+        assertClassAndMethods(clazzByName, "Object", "java.lang");
 
         clazzByName = classService.findByCanonicalName("java.lang.String");
-        assertClassAndMethods(clazzByName, "String", "java.lang", State.COMPLETE);
+        assertClassAndMethods(clazzByName, "String", "java.lang");
     }
 
     @Test
@@ -56,22 +55,19 @@ public class ClassTest extends AbstractTestBase {
             clazz.setPkg(pkg);
             clazz.addMethod(createHashCode());
             clazz.addMethod(createEquals());
-            clazz.setState(State.PARTIAL);
             Assert.assertNull(classService.findByCanonicalName(clazz.getCanonicalName()));
             classService.addClass(clazz);
         }
 
         Clazz clazzByName = classService.findByCanonicalName("java.lang.Object");
-        assertClassAndMethods(clazzByName, "Object", "java.lang", State.PARTIAL);
-        clazzByName.setState(State.COMPLETE);
+        assertClassAndMethods(clazzByName, "Object", "java.lang");
         clazzByName = classService.addClass(clazzByName);
-        assertClassAndMethods(clazzByName, "Object", "java.lang", State.COMPLETE);
+        assertClassAndMethods(clazzByName, "Object", "java.lang");
 
         clazzByName = classService.findByCanonicalName("java.lang.String");
-        assertClassAndMethods(clazzByName, "String", "java.lang", State.PARTIAL);
-        clazzByName.setState(State.COMPLETE);
+        assertClassAndMethods(clazzByName, "String", "java.lang");
         clazzByName = classService.addClass(clazzByName);
-        assertClassAndMethods(clazzByName, "String", "java.lang", State.COMPLETE);
+        assertClassAndMethods(clazzByName, "String", "java.lang");
     }
 
     @Test
@@ -81,12 +77,11 @@ public class ClassTest extends AbstractTestBase {
         Clazz clazz = new Clazz();
         clazz.setPkg(pkg);
         clazz.setName("Foo");
-        clazz.setState(State.COMPLETE);
         Assert.assertNull(classService.findByCanonicalName(clazz.getCanonicalName()));
         classService.addClass(clazz);
 
         Clazz clazzByName = classService.findByCanonicalName("com.onyem.Foo");
-        assertClass(clazzByName, "Foo", "com.onyem", State.COMPLETE);
+        assertClass(clazzByName, "Foo", "com.onyem");
 
         long classId = clazzByName.getId();
 
@@ -95,12 +90,11 @@ public class ClassTest extends AbstractTestBase {
         clazz = new Clazz();
         clazz.setPkg(pkg);
         clazz.setName("Foo");
-        clazz.setState(State.COMPLETE);
         Assert.assertNull(classService.findByCanonicalName(clazz.getCanonicalName()));
         classService.addClass(clazz);
 
         clazzByName = classService.findByCanonicalName("org.onyem.Foo");
-        assertClass(clazzByName, "Foo", "org.onyem", State.COMPLETE);
+        assertClass(clazzByName, "Foo", "org.onyem");
 
         Assert.assertTrue(clazzByName.getId() != classId);
     }
@@ -119,10 +113,9 @@ public class ClassTest extends AbstractTestBase {
         return method;
     }
 
-    private void assertClass(Clazz clazzByName, String name, String pkg, State classState) {
+    private void assertClass(Clazz clazzByName, String name, String pkg) {
         Assert.assertNotNull(clazzByName.getId());
         Assert.assertEquals(name, clazzByName.getName());
-        Assert.assertEquals(classState, clazzByName.getState());
 
         if (pkg == null) {
             Assert.assertNull(clazzByName.getPkg());
@@ -130,12 +123,11 @@ public class ClassTest extends AbstractTestBase {
             final Long pkgId = clazzByName.getPkg().getId();
             Assert.assertNotNull(pkgId);
             Assert.assertEquals(pkg, clazzByName.getPkg().getName());
-            Assert.assertEquals(State.COMPLETE, clazzByName.getPkg().getState());
         }
     }
 
-    private void assertClassAndMethods(Clazz clazzByName, String name, String pkg, State classState) {
-        assertClass(clazzByName, name, pkg, classState);
+    private void assertClassAndMethods(Clazz clazzByName, String name, String pkg) {
+        assertClass(clazzByName, name, pkg);
 
         Map<String, Method> methodsByName = clazzByName.getMethods().stream()
                 .collect(Collectors.toMap(Method::getName, (m) -> m));
@@ -145,13 +137,11 @@ public class ClassTest extends AbstractTestBase {
         Assert.assertEquals(clazzByName.getId(), method.getClazz().getId());
         Assert.assertEquals(Access.PUBLIC, method.getAccess());
         Assert.assertTrue(method.getFlags().isEmpty());
-        Assert.assertEquals(State.COMPLETE, method.getState());
 
         method = methodsByName.get("equals");
         Assert.assertNotNull(method.getId());
         Assert.assertEquals(clazzByName.getId(), method.getClazz().getId());
         Assert.assertEquals(Access.PUBLIC, method.getAccess());
         Assert.assertTrue(method.getFlags().isEmpty());
-        Assert.assertEquals(State.COMPLETE, method.getState());
     }
 }

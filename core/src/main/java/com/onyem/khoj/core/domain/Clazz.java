@@ -34,8 +34,6 @@ public class Clazz {
 
     private Set<Flag> flags;
 
-    private State state = State.TRANSIENT;
-
     public Long getId() {
         return id;
     }
@@ -105,14 +103,6 @@ public class Clazz {
         }
     }
 
-    public State getState() {
-        return state;
-    }
-
-    public void setState(State state) {
-        this.state = state;
-    }
-
     public String getCanonicalName() {
         if (pkg == null) {
             return name;
@@ -139,7 +129,7 @@ public class Clazz {
     @Override
     public String toString() {
         return "Clazz [id=" + id + ", type=" + type + ", name=" + getCanonicalName() + ", access=" + access
-                + ", methods=" + methods + ", state=" + state + ", flags=" + flags + "]";
+                + ", methods=" + methods + ", flags=" + flags + "]";
     }
 
 }

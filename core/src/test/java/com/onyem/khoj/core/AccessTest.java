@@ -12,7 +12,6 @@ import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Flag;
 import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.Package;
-import com.onyem.khoj.core.domain.State;
 import com.onyem.khoj.core.service.ClassService;
 
 public class AccessTest extends AbstractTestBase {
@@ -34,7 +33,6 @@ public class AccessTest extends AbstractTestBase {
         clazz.addMethod(createMethod("foo", Access.PRIVATE));
         clazz.addMethod(createMethod("bar", null, Flag.FINAL));
         clazz.addMethod(createMethod("baz", Access.DEFAULT, Flag.ABSTRACT, Flag.FINAL));
-        clazz.setState(State.PARTIAL);
         Assert.assertNull(classService.findByCanonicalName(clazz.getCanonicalName()));
         classService.addClass(clazz);
 

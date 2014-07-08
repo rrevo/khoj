@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.Package;
-import com.onyem.khoj.core.domain.State;
 import com.onyem.khoj.core.service.ClassService;
 
 public class MethodInvokeTest extends AbstractTestBase {
@@ -35,7 +34,6 @@ public class MethodInvokeTest extends AbstractTestBase {
             clazz.addMethod(createMethod("foo"));
             clazz.addMethod(createMethod("bar"));
             clazz.addMethod(createMethod("baz"));
-            clazz.setState(State.PARTIAL);
             Assert.assertNull(classService.findByCanonicalName(clazz.getCanonicalName()));
             classService.addClass(clazz);
         }

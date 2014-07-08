@@ -14,7 +14,6 @@ import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.MethodToMethodRelationship;
 import com.onyem.khoj.core.domain.Package;
-import com.onyem.khoj.core.domain.State;
 import com.onyem.khoj.core.repository.ClassRepository;
 import com.onyem.khoj.core.repository.MethodRepository;
 import com.onyem.khoj.core.repository.PackageRepository;
@@ -49,16 +48,6 @@ public class ClassServiceImpl implements ClassService {
                     Package foundPkg = packageRepository.findByName(pkg.getName());
                     if (foundPkg != null) {
                         clazz.setPkg(foundPkg);
-                    } else {
-                        pkg.setState(State.COMPLETE);
-                    }
-                }
-                if (clazz.getState() == State.TRANSIENT) {
-                    clazz.setState(State.COMPLETE);
-                }
-                for (Method method : clazz.getMethods()) {
-                    if (method.getState() == State.TRANSIENT) {
-                        method.setState(State.COMPLETE);
                     }
                 }
                 returnClazz = classRepository.save(clazz);
@@ -67,13 +56,6 @@ public class ClassServiceImpl implements ClassService {
                 if (!prevClazz.getName().equals(clazz.getName())) {
                     throw new IllegalArgumentException("Cannot update class name");
                 }
-                if (prevClazz.getState() == State.COMPLETE) {
-                    throw new IllegalArgumentException("Finalized node");
-                }
-                if (clazz.getState() == State.TRANSIENT) {
-                    throw new IllegalArgumentException("Invalid state:" + clazz.getState());
-                }
-                prevClazz.setState(clazz.getState());
                 // TODO merge packages
                 // TODO merge methods
                 returnClazz = classRepository.save(prevClazz);
@@ -106,13 +88,7 @@ public class ClassServiceImpl implements ClassService {
             if (clazz == null) {
                 throw new IllegalArgumentException("Not persisted: " + clazz);
             }
-            if (clazz.getState() == State.COMPLETE) {
-                throw new IllegalArgumentException("Finalized node");
-            }
             method.setClazz(clazz);
-            if (method.getState() == State.TRANSIENT) {
-                method.setState(State.COMPLETE);
-            }
             Optional<Method> savedMethod = findMethodByName(clazz, method.getName());
             if (savedMethod.isPresent()) {
                 method.setId(savedMethod.get().getId());

@@ -29,7 +29,6 @@ import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Flag;
 import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.Package;
-import com.onyem.khoj.core.domain.State;
 import com.onyem.khoj.core.domain.Type;
 import com.onyem.khoj.core.service.ClassService;
 
@@ -72,21 +71,20 @@ public class ParserTest {
             pkgId = pkg.getId();
             Assert.assertEquals("com.onyem.khoj.parser.service", pkg.getName());
 
-            assertMethods(clazzParserTest.getMethods(), State.COMPLETE, false,
-                    c2("graphDatabaseService", Access.DEFAULT), c2("test", Access.PUBLIC), c2("<init>", Access.PUBLIC),
-                    c2("assertMethods", Access.PRIVATE), c2("getMethodByName", Access.PRIVATE),
-                    c2("c", Access.DEFAULT), c2("c2", Access.PRIVATE), c2("c3", Access.PROTECTED));
+            assertMethods(clazzParserTest.getMethods(), false, c2("graphDatabaseService", Access.DEFAULT),
+                    c2("test", Access.PUBLIC), c2("<init>", Access.PUBLIC), c2("assertMethods", Access.PRIVATE),
+                    c2("getMethodByName", Access.PRIVATE), c2("c", Access.DEFAULT), c2("c2", Access.PRIVATE),
+                    c2("c3", Access.PROTECTED));
             Method dbServiceMethod = getMethodByName("graphDatabaseService", clazzParserTest.getMethods());
             Method assertMethodsMethod = getMethodByName("assertMethods", clazzParserTest.getMethods());
 
             className = "org.neo4j.test.TestGraphDatabaseFactory";
             Clazz clazzDatabaseFactory = classService.findByCanonicalName(className);
-            Assert.assertEquals(State.INFERRED, clazzDatabaseFactory.getState());
             Assert.assertNull(clazzDatabaseFactory.getAccess());
             Assert.assertNull(clazzDatabaseFactory.getType());
             Assert.assertNull(clazzDatabaseFactory.getFlags());
 
-            assertMethods(clazzDatabaseFactory.getMethods(), State.INFERRED, true, c("newImpermanentDatabase"));
+            assertMethods(clazzDatabaseFactory.getMethods(), true, c("newImpermanentDatabase"));
             Method methodInvoked = clazzDatabaseFactory.getMethods().iterator().next();
 
             Set<Method> methodsInvoked = classService.getMethodsInvoked(dbServiceMethod);
@@ -94,17 +92,17 @@ public class ParserTest {
             Assert.assertEquals(methodInvoked.getId(), methodsInvoked.iterator().next().getId());
 
             methodsInvoked = classService.getMethodsInvoked(assertMethodsMethod);
-            Assert.assertEquals(9, methodsInvoked.size());
+            Assert.assertEquals(7, methodsInvoked.size());
 
             Clazz clazzMethod = classService.findByCanonicalName("com.onyem.khoj.core.domain.Method");
             Assert.assertNull(clazzMethod.getAccess());
             Assert.assertNull(clazzMethod.getType());
             Assert.assertNull(clazzMethod.getFlags());
 
-            Assert.assertEquals(getMethodByName("getState", clazzMethod.getMethods()).getId(),
-                    getMethodByName("getState", methodsInvoked).getId());
-            Assert.assertEquals(getMethodByName("getId", clazzMethod.getMethods()).getId(),
-                    getMethodByName("getId", methodsInvoked).getId());
+            Assert.assertEquals(getMethodByName("getFlags", clazzMethod.getMethods()).getId(),
+                    getMethodByName("getFlags", methodsInvoked).getId());
+            Assert.assertEquals(getMethodByName("getAccess", clazzMethod.getMethods()).getId(),
+                    getMethodByName("getAccess", methodsInvoked).getId());
         }
         {
             String className = "com.onyem.khoj.parser.service.ClassParserService";
@@ -124,16 +122,15 @@ public class ParserTest {
             Assert.assertEquals(pkgId, pkg.getId().longValue());
             Assert.assertEquals("com.onyem.khoj.parser.service", pkg.getName());
 
-            assertMethods(clazz.getMethods(), State.COMPLETE, true, c3("addClass", Access.PUBLIC, Flag.ABSTRACT));
+            assertMethods(clazz.getMethods(), true, c3("addClass", Access.PUBLIC, Flag.ABSTRACT));
 
             clazz = classService.findByCanonicalName("com.onyem.khoj.core.domain.Clazz");
-            Assert.assertEquals(State.INFERRED, clazz.getState());
             Assert.assertNull(clazz.getAccess());
             Assert.assertNull(clazz.getType());
             Assert.assertNull(clazz.getFlags());
 
-            assertMethods(clazz.getMethods(), State.INFERRED, true, c("getId"), c("getName"), c("getPkg"),
-                    c("getMethods"), c("getState"), c("getAccess"), c("getType"), c("getFlags"));
+            assertMethods(clazz.getMethods(), true, c("getId"), c("getName"), c("getPkg"), c("getMethods"),
+                    c("getAccess"), c("getType"), c("getFlags"));
         }
     }
 
@@ -150,18 +147,13 @@ public class ParserTest {
     }
 
     @SuppressWarnings("unchecked")
-    private void assertMethods(Set<Method> methods, State state, boolean checkSize,
-            Triple<String, Access, Flag>... methodInfos) {
+    private void assertMethods(Set<Method> methods, boolean checkSize, Triple<String, Access, Flag>... methodInfos) {
         Map<String, Method> methodsByName = methods.stream().collect(Collectors.toMap(Method::getName, (m) -> m));
         int size = 0;
         for (Triple<String, Access, Flag> methodInfo : methodInfos) {
             String name = methodInfo.getLeft();
             Method method = methodsByName.get(name);
             Assert.assertEquals("Checking method " + name, methodInfo.getMiddle(), method.getAccess());
-            if (state != null) {
-                Assert.assertEquals(state, method.getState());
-                Assert.assertNotNull(method.getId());
-            }
             Flag flag = methodInfo.getRight();
             if (flag != null) {
                 Assert.assertEquals(1, method.getFlags().size());

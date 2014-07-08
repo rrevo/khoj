@@ -15,7 +15,6 @@ import com.onyem.khoj.core.domain.Access;
 import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Flag;
 import com.onyem.khoj.core.domain.Method;
-import com.onyem.khoj.core.domain.State;
 import com.onyem.khoj.core.domain.Type;
 import com.onyem.khoj.core.service.ClassService;
 import com.onyem.khoj.parser.service.ClassParserService;
@@ -49,7 +48,6 @@ public class ClassParserServiceImpl implements ClassParserService {
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
             Clazz clazz = new Clazz();
             clazz.setName(name);
-            clazz.setState(State.PARTIAL);
             clazz.setAccess(getAccess(access));
             clazz.setType(getType(access));
             clazz.setFlags(getFlags(access));
@@ -114,7 +112,6 @@ public class ClassParserServiceImpl implements ClassParserService {
 
         @Override
         public void visitEnd() {
-            clazz.setState(State.COMPLETE);
             this.clazz = classService.addClass(clazz);
             super.visitEnd();
         }
@@ -138,7 +135,6 @@ public class ClassParserServiceImpl implements ClassParserService {
 
                 Clazz clazz = new Clazz();
                 clazz.setName(owner);
-                clazz.setState(State.INFERRED);
 
                 Clazz foundClazz = classService.findByCanonicalName(clazz.getCanonicalName());
                 if (foundClazz == null) {
@@ -153,7 +149,6 @@ public class ClassParserServiceImpl implements ClassParserService {
                     invokedMethod = new Method();
                     invokedMethod.setClazz(clazz);
                     invokedMethod.setName(name);
-                    invokedMethod.setState(State.INFERRED);
                     clazz = classService.addClassMethod(clazz, invokedMethod);
 
                     invokedMethod = findMethodByName(clazz, name).get();
