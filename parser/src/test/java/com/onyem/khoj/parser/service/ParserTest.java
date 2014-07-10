@@ -105,7 +105,7 @@ public class ParserTest {
                     getMethodByName("getAccess", methodsInvoked).getId());
         }
         {
-            String className = "com.onyem.khoj.parser.service.ClassParserService";
+            String className = "com.onyem.khoj.parser.service.impl.ClassParserServiceImpl";
             ClassReader classReader = new ClassReader(className);
             ClassWriter classWriter = new ClassWriter(0);
             classReader.accept(classWriter, 0);
@@ -113,14 +113,35 @@ public class ParserTest {
 
             Clazz clazz = classParserService.addClass(bytes);
             Assert.assertNotNull(clazz.getId());
+            Assert.assertEquals("ClassParserServiceImpl", clazz.getName());
+            Assert.assertEquals(Access.PUBLIC, clazz.getAccess());
+            Assert.assertEquals(Type.CLASS, clazz.getType());
+
+            Package pkg = clazz.getPkg();
+            Assert.assertNotNull(pkg.getId());
+            Assert.assertEquals("com.onyem.khoj.parser.service.impl", pkg.getName());
+
+            assertMethods(clazz.getMethods(), false, c2("addClass", Access.PUBLIC), c2("getClassName", Access.PRIVATE),
+                    c2("<init>", Access.PUBLIC), c2("findMethodByName", Access.PRIVATE),
+                    c2("getPackageName", Access.PRIVATE));
+
+            className = "com.onyem.khoj.parser.service.ClassParserService";
+            classReader = new ClassReader(className);
+            classWriter = new ClassWriter(0);
+            classReader.accept(classWriter, 0);
+            bytes = classWriter.toByteArray();
+
+            clazz = classParserService.addClass(bytes);
+
+            Assert.assertNotNull(clazz.getId());
             Assert.assertEquals("ClassParserService", clazz.getName());
             Assert.assertEquals(Access.PUBLIC, clazz.getAccess());
             Assert.assertEquals(Type.INTERFACE, clazz.getType());
             Assert.assertEquals(Collections.singleton(Flag.ABSTRACT), clazz.getFlags());
 
-            Package pkg = clazz.getPkg();
-            Assert.assertEquals(pkgId, pkg.getId().longValue());
+            pkg = clazz.getPkg();
             Assert.assertEquals("com.onyem.khoj.parser.service", pkg.getName());
+            Assert.assertEquals(pkgId, pkg.getId().longValue());
 
             assertMethods(clazz.getMethods(), true, c3("addClass", Access.PUBLIC, Flag.ABSTRACT));
 
@@ -130,7 +151,7 @@ public class ParserTest {
             Assert.assertNull(clazz.getFlags());
 
             assertMethods(clazz.getMethods(), true, c("getId"), c("getName"), c("getPkg"), c("getMethods"),
-                    c("getAccess"), c("getType"), c("getFlags"));
+                    c("getAccess"), c("getType"), c("getFlags"), c("getCanonicalName"));
         }
     }
 

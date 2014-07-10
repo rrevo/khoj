@@ -31,7 +31,7 @@ public class Application {
 
     public void run() throws Exception {
 
-        String className = "com.onyem.khoj.parser.Application";
+        String className = "com.onyem.khoj.parser.service.impl.ClassParserServiceImpl";
         ClassReader classReader = new ClassReader(className);
         ClassWriter classWriter = new ClassWriter(0);
         classReader.accept(classWriter, 0);

@@ -53,20 +53,16 @@ public class ClassTest extends AbstractTestBase {
             Clazz clazz = new Clazz();
             clazz.setName(clazzName);
             clazz.setPkg(pkg);
-            clazz.addMethod(createHashCode());
-            clazz.addMethod(createEquals());
             Assert.assertNull(classService.findByCanonicalName(clazz.getCanonicalName()));
             classService.addClass(clazz);
+            classService.addClassMethod(clazz, createEquals());
+            classService.addClassMethod(clazz, createHashCode());
         }
 
         Clazz clazzByName = classService.findByCanonicalName("java.lang.Object");
         assertClassAndMethods(clazzByName, "Object", "java.lang");
-        clazzByName = classService.addClass(clazzByName);
-        assertClassAndMethods(clazzByName, "Object", "java.lang");
 
         clazzByName = classService.findByCanonicalName("java.lang.String");
-        assertClassAndMethods(clazzByName, "String", "java.lang");
-        clazzByName = classService.addClass(clazzByName);
         assertClassAndMethods(clazzByName, "String", "java.lang");
     }
 

@@ -10,6 +10,7 @@ import org.springframework.data.neo4j.core.GraphDatabase;
 import org.springframework.data.neo4j.support.Neo4jTemplate;
 import org.springframework.stereotype.Service;
 
+import com.onyem.khoj.core.domain.ClassToClassRelationship;
 import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.MethodToMethodRelationship;
@@ -42,24 +43,21 @@ public class ClassServiceImpl implements ClassService {
         Clazz returnClazz = null;
         Transaction tx = graphDatabase.beginTx();
         try {
-            if (clazz.getId() == null) {
-                Package pkg = clazz.getPkg();
-                if (pkg != null) {
-                    Package foundPkg = packageRepository.findByName(pkg.getName());
-                    if (foundPkg != null) {
-                        clazz.setPkg(foundPkg);
-                    }
+            Clazz prevClazz = findByCanonicalName(clazz.getCanonicalName());
+            if (prevClazz != null) {
+                if (clazz.getId() == null) {
+                    clazz.setId(prevClazz.getId());
                 }
-                returnClazz = classRepository.save(clazz);
-            } else {
-                Clazz prevClazz = classRepository.findOne(clazz.getId());
-                if (!prevClazz.getName().equals(clazz.getName())) {
-                    throw new IllegalArgumentException("Cannot update class name");
-                }
-                // TODO merge packages
-                // TODO merge methods
-                returnClazz = classRepository.save(prevClazz);
             }
+
+            Package pkg = clazz.getPkg();
+            if (pkg != null) {
+                Package foundPkg = packageRepository.findByName(pkg.getName());
+                if (foundPkg != null) {
+                    clazz.setPkg(foundPkg);
+                }
+            }
+            returnClazz = classRepository.save(clazz);
             tx.success();
         } finally {
             tx.close();
@@ -99,6 +97,30 @@ public class ClassServiceImpl implements ClassService {
         } finally {
             tx.close();
         }
+    }
+
+    @Override
+    public boolean addClassImplements(Clazz clazz, Set<Clazz> interfaces) {
+        boolean created = false;
+        Transaction tx = graphDatabase.beginTx();
+        try {
+            for (Clazz anInterface : interfaces) {
+
+                Object o = template.createRelationshipBetween(clazz, anInterface, ClassToClassRelationship.class,
+                        "IMPLEMENTS", false);
+                created = o != null;
+                tx.success();
+            }
+        } finally {
+            tx.close();
+        }
+        return created;
+    }
+
+    @Override
+    public Set<Clazz> getClassImplements(Clazz clazz) {
+        Set<Clazz> interfaces = classRepository.findInterfacesImplementedByClazz(clazz.getId());
+        return interfaces.stream().map(c -> classRepository.findOne(c.getId())).collect(Collectors.toSet());
     }
 
     private Optional<Method> findMethodByName(Clazz clazz, String methodName) {

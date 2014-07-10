@@ -1,5 +1,6 @@
 package com.onyem.khoj.parser.service.impl;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -15,6 +16,7 @@ import com.onyem.khoj.core.domain.Access;
 import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Flag;
 import com.onyem.khoj.core.domain.Method;
+import com.onyem.khoj.core.domain.Package;
 import com.onyem.khoj.core.domain.Type;
 import com.onyem.khoj.core.service.ClassService;
 import com.onyem.khoj.parser.service.ClassParserService;
@@ -31,7 +33,7 @@ public class ClassParserServiceImpl implements ClassParserService {
         ClassReader cr = new ClassReader(bytes);
         cr.accept(cp, 0);
 
-        return cp.clazz;
+        return classService.findByCanonicalName(cp.clazz.getCanonicalName());
     }
 
     static class ClassPrinter extends ClassVisitor {
@@ -46,12 +48,39 @@ public class ClassParserServiceImpl implements ClassParserService {
 
         @Override
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+
+            Package pkg = null;
+            String pkgName = getPackageName(name);
+            if (pkgName != null) {
+                pkg = new Package();
+                pkg.setName(pkgName);
+            }
+
             Clazz clazz = new Clazz();
-            clazz.setName(name);
+            clazz.setName(getClassName(name));
             clazz.setAccess(getAccess(access));
             clazz.setType(getType(access));
             clazz.setFlags(getFlags(access));
+            clazz.setPkg(pkg);
             this.clazz = classService.addClass(clazz);
+
+            for (String interfaceName : interfaces) {
+
+                Package interfacePkg = null;
+                String interfacePkgName = getPackageName(interfaceName);
+                if (interfacePkgName != null) {
+                    interfacePkg = new Package();
+                    interfacePkg.setName(interfacePkgName);
+                }
+
+                Clazz interfaceClazz = new Clazz();
+                interfaceClazz.setName(getClassName(interfaceName));
+                interfaceClazz.setPkg(interfacePkg);
+                interfaceClazz.setType(Type.INTERFACE);
+                interfaceClazz = classService.addClass(interfaceClazz);
+
+                classService.addClassImplements(clazz, Collections.singleton(interfaceClazz));
+            }
         }
 
         private Set<Flag> getFlags(int access) {
@@ -109,13 +138,6 @@ public class ClassParserServiceImpl implements ClassParserService {
             MethodPrinter methodPrinter = new MethodPrinter(api, methodVisitor, classService, method);
             return methodPrinter;
         }
-
-        @Override
-        public void visitEnd() {
-            this.clazz = classService.addClass(clazz);
-            super.visitEnd();
-        }
-
     }
 
     static class MethodPrinter extends MethodVisitor {
@@ -164,6 +186,24 @@ public class ClassParserServiceImpl implements ClassParserService {
 
     static private Optional<Method> findMethodByName(Clazz clazz, String methodName) {
         return clazz.getMethods().stream().filter(m -> m.getName().equals(methodName)).findFirst();
+    }
+
+    static private String getPackageName(String canonicalName) {
+        canonicalName = canonicalName.replace("/", ".");
+        int lastDot = canonicalName.lastIndexOf(".");
+        if (lastDot > 0) {
+            return canonicalName.substring(0, lastDot);
+        }
+        return null;
+    }
+
+    static private String getClassName(String canonicalName) {
+        canonicalName = canonicalName.replace("/", ".");
+        int lastDot = canonicalName.lastIndexOf(".");
+        if (lastDot > 0) {
+            return canonicalName.substring(lastDot + 1);
+        }
+        return canonicalName;
     }
 
 }

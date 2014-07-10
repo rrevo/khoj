@@ -13,6 +13,10 @@ public interface ClassService {
 
     Clazz findByCanonicalName(String name);
 
+    boolean addClassImplements(Clazz clazz, Set<Clazz> interfaces);
+
+    Set<Clazz> getClassImplements(Clazz clazz);
+
     boolean addMethodInvokes(Method source, Method destination);
 
     Set<Method> getMethodsInvoked(Method source);
