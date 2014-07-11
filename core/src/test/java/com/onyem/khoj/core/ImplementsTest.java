@@ -55,6 +55,8 @@ public class ImplementsTest extends AbstractTestBase {
         eclipseClass.addMethod(createMethod("bar", Access.DEFAULT));
         eclipseClass = classService.addClass(eclipseClass);
 
+        Assert.assertTrue(classService.getClassImplements(eclipseClass).isEmpty());
+
         classService.addClassImplements(eclipseClass, new HashSet<Clazz>(Arrays.asList(ideInterface, rcpInterface)));
 
         Map<Long, Clazz> interfaces = classService.getClassImplements(eclipseClass).stream()
