@@ -17,6 +17,10 @@ public interface ClassService {
 
     Set<Clazz> getClassImplements(Clazz clazz);
 
+    Clazz getClassExtends(Clazz clazz);
+
+    boolean addClassExtends(Clazz clazz, Clazz superClazz);
+
     boolean addMethodInvokes(Method source, Method destination);
 
     Set<Method> getMethodsInvoked(Method source);

@@ -1,6 +1,7 @@
 package com.onyem.khoj.parser;
 
 import java.io.File;
+import java.util.Set;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 import com.onyem.khoj.core.domain.Clazz;
+import com.onyem.khoj.core.service.ClassService;
 import com.onyem.khoj.parser.service.ClassParserService;
 import com.onyem.khoj.parser.service.ParserModule;
 
@@ -29,6 +31,9 @@ public class Application {
     @Autowired
     ClassParserService classParserService;
 
+    @Autowired
+    ClassService classService;
+
     public void run() throws Exception {
 
         String className = "com.onyem.khoj.parser.service.impl.ClassParserServiceImpl";
@@ -38,7 +43,15 @@ public class Application {
         byte[] bytes = classWriter.toByteArray();
 
         Clazz clazz = classParserService.addClass(bytes);
-        System.out.println(clazz);
+        System.out.println("Class: " + clazz);
+
+        Clazz superClazz = classService.getClassExtends(clazz);
+        System.out.println("Super Class: " + superClazz);
+
+        Set<Clazz> interfaces = classService.getClassImplements(clazz);
+        for (Clazz interfaceClazz : interfaces) {
+            System.out.println("Interface :" + interfaceClazz);
+        }
     }
 
     public static void main(String[] args) throws Exception {

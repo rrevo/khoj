@@ -1,10 +1,5 @@
 package com.onyem.khoj.core;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,13 +12,13 @@ import com.onyem.khoj.core.domain.Package;
 import com.onyem.khoj.core.domain.Type;
 import com.onyem.khoj.core.service.ClassService;
 
-public class ImplementsTest extends AbstractTestBase {
+public class ExtendsTest extends AbstractTestBase {
 
     @Autowired
     ClassService classService;
 
     @Test
-    public void testClassInterfaces() throws Exception {
+    public void testExtends() throws Exception {
 
         Package pkg = new Package();
         pkg.setName("com.onyem");
@@ -46,24 +41,12 @@ public class ImplementsTest extends AbstractTestBase {
         rcpInterface.addMethod(createMethod("bar", Access.DEFAULT, Flag.ABSTRACT));
         rcpInterface = classService.addClass(rcpInterface);
 
-        Clazz eclipseClass = new Clazz();
-        eclipseClass.setName("Eclipse");
-        eclipseClass.setPkg(pkg);
-        eclipseClass.setAccess(Access.PUBLIC);
-        eclipseClass.setType(Type.CLASS);
-        eclipseClass.addMethod(createMethod("foo", Access.DEFAULT));
-        eclipseClass.addMethod(createMethod("bar", Access.DEFAULT));
-        eclipseClass = classService.addClass(eclipseClass);
+        Assert.assertNull(classService.getClassExtends(ideInterface));
 
-        Assert.assertTrue(classService.getClassImplements(eclipseClass).isEmpty());
+        classService.addClassExtends(ideInterface, rcpInterface);
 
-        classService.addClassImplements(eclipseClass, new HashSet<Clazz>(Arrays.asList(ideInterface, rcpInterface)));
-
-        Map<Long, Clazz> interfaces = classService.getClassImplements(eclipseClass).stream()
-                .collect(Collectors.toMap(Clazz::getId, (m) -> m));
-        Assert.assertEquals(2, interfaces.size());
-        Assert.assertEquals(ideInterface.getCanonicalName(), interfaces.get(ideInterface.getId()).getCanonicalName());
-        Assert.assertEquals(rcpInterface.getCanonicalName(), interfaces.get(rcpInterface.getId()).getCanonicalName());
+        Clazz superClazz = classService.getClassExtends(ideInterface);
+        Assert.assertEquals(rcpInterface.getCanonicalName(), superClazz.getCanonicalName());
     }
 
     private Method createMethod(String name, Access access, Flag... flags) {

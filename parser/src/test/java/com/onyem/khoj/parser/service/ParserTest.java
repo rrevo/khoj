@@ -52,6 +52,7 @@ public class ParserTest {
     @SuppressWarnings("unchecked")
     @Test
     public void test() throws Exception {
+        Clazz objectClass = null;
         long pkgId = -1;
         {
             String className = "com.onyem.khoj.parser.service.ParserTest";
@@ -77,6 +78,9 @@ public class ParserTest {
                     c2("c3", Access.PROTECTED));
             Method dbServiceMethod = getMethodByName("graphDatabaseService", clazzParserTest.getMethods());
             Method assertMethodsMethod = getMethodByName("assertMethods", clazzParserTest.getMethods());
+
+            objectClass = classService.getClassExtends(clazzParserTest);
+            Assert.assertEquals("java.lang.Object", objectClass.getCanonicalName());
 
             className = "org.neo4j.test.TestGraphDatabaseFactory";
             Clazz clazzDatabaseFactory = classService.findByCanonicalName(className);
@@ -121,6 +125,8 @@ public class ParserTest {
             Assert.assertNotNull(pkg.getId());
             Assert.assertEquals("com.onyem.khoj.parser.service.impl", pkg.getName());
 
+            Assert.assertEquals(objectClass.getCanonicalName(), classService.getClassExtends(clazz).getCanonicalName());
+
             assertMethods(clazz.getMethods(), false, c2("addClass", Access.PUBLIC), c2("getClassName", Access.PRIVATE),
                     c2("<init>", Access.PUBLIC), c2("findMethodByName", Access.PRIVATE),
                     c2("getPackageName", Access.PRIVATE));
@@ -143,12 +149,16 @@ public class ParserTest {
             Assert.assertEquals("com.onyem.khoj.parser.service", pkg.getName());
             Assert.assertEquals(pkgId, pkg.getId().longValue());
 
+            Assert.assertNull(classService.getClassExtends(clazz));
+
             assertMethods(clazz.getMethods(), true, c3("addClass", Access.PUBLIC, Flag.ABSTRACT));
 
             clazz = classService.findByCanonicalName("com.onyem.khoj.core.domain.Clazz");
             Assert.assertNull(clazz.getAccess());
             Assert.assertNull(clazz.getType());
             Assert.assertNull(clazz.getFlags());
+
+            Assert.assertNull(classService.getClassExtends(clazz));
 
             assertMethods(clazz.getMethods(), true, c("getId"), c("getName"), c("getPkg"), c("getMethods"),
                     c("getAccess"), c("getType"), c("getFlags"), c("getCanonicalName"));

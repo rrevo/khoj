@@ -59,10 +59,30 @@ public class ClassParserServiceImpl implements ClassParserService {
             Clazz clazz = new Clazz();
             clazz.setName(getClassName(name));
             clazz.setAccess(getAccess(access));
-            clazz.setType(getType(access));
+            Type type = getType(access);
+            clazz.setType(type);
             clazz.setFlags(getFlags(access));
             clazz.setPkg(pkg);
             this.clazz = classService.addClass(clazz);
+
+            if (superName != null) {
+                boolean interfaceExtendingObject = (type == Type.INTERFACE && superName.equals("java/lang/Object"));
+                if (!interfaceExtendingObject) {
+                    Package superPkg = null;
+                    String superPkgName = getPackageName(superName);
+                    if (superPkgName != null) {
+                        superPkg = new Package();
+                        superPkg.setName(superPkgName);
+                    }
+
+                    Clazz superClazz = new Clazz();
+                    superClazz.setName(getClassName(superName));
+                    superClazz.setPkg(superPkg);
+                    superClazz = classService.addClass(superClazz);
+
+                    classService.addClassExtends(clazz, superClazz);
+                }
+            }
 
             for (String interfaceName : interfaces) {
 

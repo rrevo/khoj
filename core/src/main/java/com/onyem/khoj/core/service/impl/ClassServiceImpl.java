@@ -119,8 +119,29 @@ public class ClassServiceImpl implements ClassService {
 
     @Override
     public Set<Clazz> getClassImplements(Clazz clazz) {
-        Set<Clazz> interfaces = classRepository.findInterfacesImplementedByClazz(clazz.getId());
+        Set<Clazz> interfaces = classRepository.findClazzImplements(clazz.getId());
         return interfaces.stream().map(c -> classRepository.findOne(c.getId())).collect(Collectors.toSet());
+    }
+
+    @Override
+    public boolean addClassExtends(Clazz clazz, Clazz superClazz) {
+        boolean created = false;
+        Transaction tx = graphDatabase.beginTx();
+        try {
+            Object o = template.createRelationshipBetween(clazz, superClazz, ClassToClassRelationship.class, "EXTENDS",
+                    false);
+            created = o != null;
+            tx.success();
+        } finally {
+            tx.close();
+        }
+        return created;
+    }
+
+    @Override
+    public Clazz getClassExtends(Clazz clazz) {
+        Clazz superClass = classRepository.findClazzExtends(clazz.getId());
+        return superClass;
     }
 
     private Optional<Method> findMethodByName(Clazz clazz, String methodName) {

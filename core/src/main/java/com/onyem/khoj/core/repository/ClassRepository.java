@@ -13,6 +13,9 @@ public interface ClassRepository extends GraphRepository<Clazz> {
     Clazz findByName(String className, String packageName);
 
     @Query(value = "MATCH (clazz {nodeType:'com.onyem.khoj.core.domain.Clazz'})-[:IMPLEMENTS]->(interface {nodeType:'com.onyem.khoj.core.domain.Clazz'}) WHERE id(clazz) = {0} return interface")
-    Set<Clazz> findInterfacesImplementedByClazz(long clazzId);
+    Set<Clazz> findClazzImplements(long clazzId);
+
+    @Query(value = "MATCH (clazz {nodeType:'com.onyem.khoj.core.domain.Clazz'})-[:EXTENDS]->(super {nodeType:'com.onyem.khoj.core.domain.Clazz'}) WHERE id(clazz) = {0} return super")
+    Clazz findClazzExtends(long clazzId);
 
 }
