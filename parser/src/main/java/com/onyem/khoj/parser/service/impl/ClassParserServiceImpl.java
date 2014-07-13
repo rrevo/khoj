@@ -9,6 +9,8 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,8 @@ import com.onyem.khoj.parser.service.ClassParserService;
 
 @Service
 public class ClassParserServiceImpl implements ClassParserService {
+
+    static Logger logger = LoggerFactory.getLogger(ClassParserServiceImpl.class);
 
     @Autowired
     ClassService classService;
@@ -155,19 +159,20 @@ public class ClassParserServiceImpl implements ClassParserService {
             method = findMethodByName(newClass, name).get();
 
             MethodVisitor methodVisitor = super.visitMethod(access, name, desc, signature, exceptions);
-            MethodPrinter methodPrinter = new MethodPrinter(api, methodVisitor, classService, method);
+            MethodPrinter methodPrinter = new MethodPrinter(api, methodVisitor, classService, clazz, method);
             return methodPrinter;
         }
     }
 
     static class MethodPrinter extends MethodVisitor {
         final private ClassService classService;
-
+        final private Clazz clazz;
         final private Method method;
 
-        public MethodPrinter(int api, MethodVisitor methodVisitor, ClassService classService, Method method) {
+        public MethodPrinter(int api, MethodVisitor methodVisitor, ClassService classService, Clazz clazz, Method method) {
             super(api, methodVisitor);
             this.classService = classService;
+            this.clazz = clazz;
             this.method = method;
         }
 
@@ -175,29 +180,35 @@ public class ClassParserServiceImpl implements ClassParserService {
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
             if (opcode == Opcodes.INVOKEVIRTUAL) {
 
-                Clazz clazz = new Clazz();
-                clazz.setName(owner);
+                if (!owner.startsWith("[")) {
 
-                Clazz foundClazz = classService.findByCanonicalName(clazz.getCanonicalName());
-                if (foundClazz == null) {
-                    clazz = classService.addClass(clazz);
+                    Clazz clazz = new Clazz();
+                    clazz.setName(owner);
+
+                    Clazz foundClazz = classService.findByCanonicalName(clazz.getCanonicalName());
+                    if (foundClazz == null) {
+                        clazz = classService.addClass(clazz);
+                    } else {
+                        clazz = foundClazz;
+                    }
+
+                    Optional<Method> isMethod = findMethodByName(clazz, name);
+                    Method invokedMethod = null;
+                    if (!isMethod.isPresent()) {
+                        invokedMethod = new Method();
+                        invokedMethod.setClazz(clazz);
+                        invokedMethod.setName(name);
+                        clazz = classService.addClassMethod(clazz, invokedMethod);
+
+                        invokedMethod = findMethodByName(clazz, name).get();
+                    } else {
+                        invokedMethod = isMethod.get();
+                    }
+                    classService.addMethodInvokes(method, invokedMethod);
                 } else {
-                    clazz = foundClazz;
+                    logger.warn("Ignoring parsing of array class : {} from {}#{} ", owner, clazz.getCanonicalName(),
+                            method.getName());
                 }
-
-                Optional<Method> isMethod = findMethodByName(clazz, name);
-                Method invokedMethod = null;
-                if (!isMethod.isPresent()) {
-                    invokedMethod = new Method();
-                    invokedMethod.setClazz(clazz);
-                    invokedMethod.setName(name);
-                    clazz = classService.addClassMethod(clazz, invokedMethod);
-
-                    invokedMethod = findMethodByName(clazz, name).get();
-                } else {
-                    invokedMethod = isMethod.get();
-                }
-                classService.addMethodInvokes(method, invokedMethod);
 
             }
             super.visitMethodInsn(opcode, owner, name, desc, itf);

@@ -6,6 +6,7 @@ mainClassName = "com.onyem.khoj.parser.Application"
 dependencies {
     compile project(':core')
     compile("org.ow2.asm:asm:$asmVersion")
+    compile("commons-io:commons-io:$commonsIoVersion")
     
     testCompile("junit:junit:$junitVersion")
     testCompile("org.springframework:spring-test:$springVersion")

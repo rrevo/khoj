@@ -71,7 +71,7 @@ public class ClassServiceImpl implements ClassService {
         String pkgName = names[0];
         String className = names[1];
         if (pkgName == null) {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException("Class without package name found: " + name);
         } else {
             Clazz clazz = classRepository.findByName(className, pkgName);
             return clazz;
