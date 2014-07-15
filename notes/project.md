@@ -16,3 +16,8 @@ Parser project
 --------------
  
 Initially scan class files to load information. The parser will have to scale to jars and also become maven aware. Based on source, it should be possible to create a model that is always evolving. This is required for a case where creating visualizations of live programming.
+
+The parser analyses classes in two ways-
+
+1. Direct - When the bytecode is present, the core model is created from it.
+1. Infered - When a reference from a Direct class is made to another class which has not be loaded Directly. Here partial information about the class is made.
