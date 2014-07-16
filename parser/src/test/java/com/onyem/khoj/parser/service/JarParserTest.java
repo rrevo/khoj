@@ -2,6 +2,7 @@ package com.onyem.khoj.parser.service;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.Assert;
@@ -19,6 +20,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import com.onyem.khoj.core.domain.Access;
+import com.onyem.khoj.core.domain.Artifact;
 import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.Type;
@@ -41,11 +43,36 @@ public class JarParserTest {
     @Autowired
     ClassService classService;
 
+    private static final String version = "3.3.1";
+    private static final String artifactId = "commons-lang3";
+    private static final String groupId = "org.apache.commons";
+
     @Test
     public void test() throws Exception {
-        jarParserService.addJar(new File(getCommonsLangJarPath()));
+        Artifact artifact = new Artifact();
+        artifact.setGroupId(groupId);
+        artifact.setArtifactId(artifactId);
+        artifact.setVersion(version);
+
+        artifact = jarParserService.addJar(artifact, new File(getCommonsLangJarPath()));
+        Long artifactIdLong = artifact.getId();
+
+        Assert.assertNotNull(artifactIdLong);
+        Assert.assertEquals(groupId, artifact.getGroupId());
+        Assert.assertEquals(artifactId, artifact.getArtifactId());
+        Assert.assertEquals(version, artifact.getVersion());
 
         Clazz versionClazz = classService.findByCanonicalName("org.apache.commons.lang3.JavaVersion");
+
+        Set<Clazz> classes = classService.getArtifactClasses(artifact);
+        boolean found = false;
+        for (Clazz clazz : classes) {
+            if (versionClazz.getId().equals(clazz.getId())) {
+                found = true;
+            }
+        }
+        Assert.assertTrue(found);
+
         Assert.assertEquals(Type.ENUM, versionClazz.getType());
         Assert.assertEquals(Access.PUBLIC, versionClazz.getAccess());
 

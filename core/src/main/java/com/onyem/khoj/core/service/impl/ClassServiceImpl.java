@@ -10,11 +10,14 @@ import org.springframework.data.neo4j.core.GraphDatabase;
 import org.springframework.data.neo4j.support.Neo4jTemplate;
 import org.springframework.stereotype.Service;
 
+import com.onyem.khoj.core.domain.Artifact;
+import com.onyem.khoj.core.domain.ArtifactToClassRelationship;
 import com.onyem.khoj.core.domain.ClassToClassRelationship;
 import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Method;
 import com.onyem.khoj.core.domain.MethodToMethodRelationship;
 import com.onyem.khoj.core.domain.Package;
+import com.onyem.khoj.core.repository.ArtifactRepository;
 import com.onyem.khoj.core.repository.ClassRepository;
 import com.onyem.khoj.core.repository.MethodRepository;
 import com.onyem.khoj.core.repository.PackageRepository;
@@ -22,6 +25,9 @@ import com.onyem.khoj.core.service.ClassService;
 
 @Service
 public class ClassServiceImpl implements ClassService {
+
+    @Autowired
+    ArtifactRepository artifactRepository;
 
     @Autowired
     PackageRepository packageRepository;
@@ -180,4 +186,43 @@ public class ClassServiceImpl implements ClassService {
         }
     }
 
+    @Override
+    public Artifact addArtifact(Artifact artifact) {
+        Artifact returnArtifact = null;
+        Transaction tx = graphDatabase.beginTx();
+        try {
+            returnArtifact = artifactRepository.save(artifact);
+            tx.success();
+        } finally {
+            tx.close();
+        }
+        return returnArtifact;
+    }
+
+    @Override
+    public boolean addArtifactContainsClasses(Artifact artifact, Set<Clazz> classes) {
+        Transaction tx = graphDatabase.beginTx();
+        boolean created = false;
+        try {
+            for (Clazz clazz : classes) {
+                Object o = template.createRelationshipBetween(artifact, clazz, ArtifactToClassRelationship.class,
+                        "PACKAGES", false);
+                created = o != null;
+            }
+            tx.success();
+        } finally {
+            tx.close();
+        }
+        return created;
+    }
+
+    @Override
+    public Set<Artifact> findByGroupAndArtifact(String groupId, String artifactId) {
+        return artifactRepository.findByGroupAndArtifact(groupId, artifactId);
+    }
+
+    @Override
+    public Set<Clazz> getArtifactClasses(Artifact artifact) {
+        return artifactRepository.getArtifactClasses(artifact.getId());
+    }
 }

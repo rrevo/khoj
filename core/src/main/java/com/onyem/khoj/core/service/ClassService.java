@@ -2,6 +2,7 @@ package com.onyem.khoj.core.service;
 
 import java.util.Set;
 
+import com.onyem.khoj.core.domain.Artifact;
 import com.onyem.khoj.core.domain.Clazz;
 import com.onyem.khoj.core.domain.Method;
 
@@ -24,5 +25,13 @@ public interface ClassService {
     boolean addMethodInvokes(Method source, Method destination);
 
     Set<Method> getMethodsInvoked(Method source);
+
+    Artifact addArtifact(Artifact artifact);
+
+    Set<Artifact> findByGroupAndArtifact(String groupId, String artifactId);
+
+    boolean addArtifactContainsClasses(Artifact artifact, Set<Clazz> classes);
+
+    Set<Clazz> getArtifactClasses(Artifact artifact);
 
 }
