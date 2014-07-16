@@ -85,10 +85,11 @@ public class JarParserTest {
     }
 
     private String getCommonsLangJarPath() {
-        return getMavenRepoFolder() + "org/apache/commons/commons-lang3/3.1/commons-lang3-3.1.jar";
+        return getGradleCacheFolder()
+                + "/modules-2/files-2.1/org.apache.commons/commons-lang3/3.3.2/90a3822c38ec8c996e84c16a3477ef632cbc87a3/commons-lang3-3.3.2.jar";
     }
 
-    private String getMavenRepoFolder() {
-        return System.getProperty("user.home") + "/.m2/repository/";
+    private String getGradleCacheFolder() {
+        return System.getProperty("user.home") + "/.gradle/caches";
     }
 }
