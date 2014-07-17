@@ -48,8 +48,8 @@ public class Artifact {
 
     @Override
     public String toString() {
-        return "Artifact [id=" + id + ", nodeType=" + nodeType + ", groupId=" + groupId + ", artifactId=" + artifactId
-                + ", version=" + version + "]";
+        return "Artifact [id=" + id + ", groupId=" + groupId + ", artifactId=" + artifactId + ", version=" + version
+                + "]";
     }
 
 }
